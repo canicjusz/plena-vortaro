@@ -1,5 +1,6 @@
 /firefox/node_modules/
 /firefox/package-lock.json
-/firefox/public/build/
+/chrome/node_modules/
+/chrome/package-lock.json
 
 .DS_Store
