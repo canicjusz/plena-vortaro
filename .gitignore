@@ -1,6 +1,16 @@
 /firefox/node_modules/
 /firefox/package-lock.json
+/firefox/FORREVIEWER.md
+firefox_addon.zip
+firefox_source.zip
 /chrome/node_modules/
 /chrome/package-lock.json
+/chrome/FORREVIEWER.md
+node_modules
+package-lock.json
+package.json
+chrome_addon.zip
+chrome_source.zip
+zip.js
 
 .DS_Store

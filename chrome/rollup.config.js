@@ -52,8 +52,8 @@ export default [
             dest: "public",
           },
           {
-            src: "src/install/index.html",
-            dest: "public/install",
+            src: "src/install",
+            dest: "public",
           },
           {
             src: "src/popup/index.html",

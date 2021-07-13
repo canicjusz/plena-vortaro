@@ -15,6 +15,8 @@
     display: inline !important;
     visibility: visible !important;
     position: relative !important;
+    font-size: 1em !important;
+    line-height: initial !important;
   }
   `;
     head.appendChild(style);
@@ -113,7 +115,7 @@
         addRootDefinitions([...dword.parentElement.childNodes], div);
       } else if (kword && kword.parentElement) {
         addDerivationsDefinitons(
-          [...(kword.parentElement.childNodes as NodeListOf<HTMLElement>)],
+          [...(<NodeListOf<HTMLElement>>kword.parentElement.childNodes)],
           div
         );
       }
@@ -152,6 +154,8 @@
       color: textLocal.color,
       zIndex: "2147483647",
       "box-sizing": "border-box",
+      "font-family": '"Open Sans", sans-serif',
+      "line-height": "initial",
     });
     div.className = "PIValdonajxo";
     div.setAttribute("number", String(number));
@@ -174,15 +178,19 @@
   document.addEventListener("mouseup", (e) => {
     const selection = window.getSelection();
     const word = selection.toString().trim().toLowerCase();
+    const contElements = [...document.querySelectorAll("[contenteditable]")];
+    const element = <HTMLElement>e.target;
+    const isInCont = contElements.some((contElement) =>
+      contElement.contains(element)
+    );
     if (
       e.button === 0 &&
-      selection &&
       !selection.isCollapsed &&
-      e.target &&
       turnedOnLocally &&
-      /^[À-ž\w\d\s.,\-;]+$/.test(word)
+      /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
+      !isInCont
     ) {
-      const number = generateNumber(e.target as HTMLElement);
+      const number = generateNumber(element);
       if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
         createDiv(selection.getRangeAt(0), number, word);
       }
@@ -214,9 +222,14 @@
     ) || 0;
 
   document.addEventListener("mousedown", (e) => {
-    if (e.button === 0 && turnedOnLocally) {
+    const contElements = [...document.querySelectorAll("[contenteditable]")];
+    const element = <HTMLElement>e.target;
+    const isInCont = contElements.some((contElement) =>
+      contElement.contains(element)
+    );
+    if (e.button === 0 && turnedOnLocally && !isInCont) {
       const addonElements = [...document.querySelectorAll(".PIValdonajxo")];
-      const bound = getNumber(addonElements, e.target as HTMLElement);
+      const bound = getNumber(addonElements, element);
       if (bound > 0) {
         deleteSubelements(addonElements, bound);
       } else {

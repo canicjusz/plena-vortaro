@@ -3,7 +3,8 @@
   "compilerOptions": {
     "types": ["firefox-webext-browser", "svelte"],
     "isolatedModules": false,
-    "target": "es2015"
+    "target": "es2015",
+    "removeComments": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules/*", "__sapper__/*", "public/*"],

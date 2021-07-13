@@ -20,7 +20,7 @@
                     "128": "icons/on_128.png",
                 },
             });
-            browser.browserAction.setTitle({ title: "aldono ŝaltita" });
+            browser.browserAction.setTitle({ title: "Aldono ŝaltita" });
         }
         else {
             browser.browserAction.setIcon({
@@ -30,7 +30,7 @@
                     "128": "icons/off_128.png",
                 },
             });
-            browser.browserAction.setTitle({ title: "aldono malŝaltita" });
+            browser.browserAction.setTitle({ title: "Aldono malŝaltita" });
         }
     };
     browser.storage.sync.get("turnedOn").then(({ turnedOn }) => {
