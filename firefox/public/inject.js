@@ -11,15 +11,28 @@
     const createStyle = () => {
         const style = document.createElement("style");
         style.textContent = `
-  .PIValdonajxo * {
-    font-family: "Open Sans", sans-serif !important;
-    opacity: 1 !important;
-    display: inline !important;
-    visibility: visible !important;
-    position: relative !important;
-    font-size: 1em !important;
-    line-height: initial !important;
-  }
+    .PIValdonajxo *:not(sub, sup)  {
+      opacity: 1 !important;
+      display: inline !important;
+      visibility: visible !important;
+      position: relative !important;
+      line-height: initial !important;
+      vertical-align: initial !important;
+      font: revert;
+    }
+    .PIValdonajxo sup, .PIValdonajxo sub {
+      opacity: 1 !important;
+      display: inline !important;
+      visibility: visible !important;
+      position: relative !important;
+      font-size: smaller !important;
+    }
+    .PIValdonajxo sup {
+      vertical-align: super !important;
+    }  
+    .PIValdonajxo sub {
+      vertical-align: sub !important;
+    }
   `;
         head.appendChild(style);
     };
@@ -128,6 +141,7 @@
             "box-sizing": "border-box",
             "font-family": '"Open Sans", sans-serif',
             "line-height": "initial",
+            "vertical-align": "initial",
         });
         div.className = "PIValdonajxo";
         div.setAttribute("number", String(number));
