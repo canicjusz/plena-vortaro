@@ -1,0 +1,23 @@
+{
+  "name": "piv-svelte",
+  "version": "1.0.0",
+  "description": "Ĉi tie estos informoj pri kontribuado, ktp.",
+  "main": "zip.js",
+  "scripts": {
+    "build": "cd chrome && npm run build && cd ../firefox && npm run build && cd .. && node zip.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canicjusz/plena-vortaro.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/canicjusz/plena-vortaro/issues"
+  },
+  "homepage": "https://github.com/canicjusz/plena-vortaro#readme",
+  "dependencies": {
+    "adm-zip": "^0.5.5",
+    "archiver": "^5.3.0"
+  }
+}
