@@ -9,28 +9,55 @@
   const createStyle = () => {
     const style = document.createElement("style");
     style.textContent = `
-  .PIValdonajxo *:not(sub, sup)  {
-    opacity: 1 !important;
-    display: inline !important;
-    visibility: visible !important;
-    position: relative !important;
-    line-height: initial !important;
-    vertical-align: initial !important;
-    font: revert;
-  }
-  .PIValdonajxo sup, .PIValdonajxo sub {
-    opacity: 1 !important;
-    display: inline !important;
-    visibility: visible !important;
-    position: relative !important;
-    font-size: smaller !important;
-  }
-  .PIValdonajxo sup {
-    vertical-align: super !important;
-  }  
-  .PIValdonajxo sub {
-    vertical-align: sub !important;
-  }
+    .PIValdonajxo {
+      z-index: 2147483647 !important;
+      box-sizing: border-box !important;
+      font-family: "Open Sans", sans-serif !important;
+      line-height: 1.25em !important;
+      vertical-align: initial !important;
+      position: absolute !important;
+      overflow-y: auto !important;
+      border-style: solid !important;
+      width: 300px !important;
+      height: 300px !important;
+      padding: 10px !important;
+    }
+    .PIValdonajxo * {
+      font: revert !important;
+    }
+    .PIValdonajxo-w-definitions *:not(sub, sup) {
+      opacity: 1 !important;
+      display: inline !important;
+      visibility: visible !important;
+      position: relative !important;
+      line-height: 1.25em !important;
+      vertical-align: initial !important;
+    }
+    .PIValdonajxo-w-definitions sup, .PIValdonajxo sub {
+      opacity: 1 !important;
+      display: inline !important;
+      visibility: visible !important;
+      position: relative !important;
+      font-size: smaller !important;
+      line-height: 1.25em !important;
+      vertical-align: baseline !important;
+    }
+    .PIValdonajxo-w-definitions sup {
+      top: -0.5em !important;
+    }  
+    .PIValdonajxo-w-definitions sub {
+      bottom: -0.5em !important;
+    }
+    .PIValdonajxo__link {
+      text-decoration: underline !important;
+      cursor: pointer !important;
+    }
+    .PIValdonajxo__strong {
+      display: block !important;
+    }
+    .PIValdonajxo__list {
+      list-style: initial !important;
+    }
   `;
     head.appendChild(style);
   };
@@ -49,27 +76,88 @@
 
   createRelativeDiv();
 
+  const addDerivationsLinks = (div: HTMLElement, results: akiritaJSONo[]) => {
+    addOtherMessage(
+      div,
+      "Jen vortoj kun tiu ĉi radiko:",
+      "PIValdonajxo__strong"
+    );
+    let ul: HTMLElement;
+    results.forEach(({ vortoj: words, word }: akiritaJSONo, index) => {
+      if (words[0]) {
+        if (index === 0) {
+          ul = document.createElement("ul");
+          ul.classList.add("PIValdonajxo__list");
+          div.appendChild(ul);
+        }
+        const li = document.createElement("li");
+
+        const span = document.createElement("span");
+        span.classList.add("PIValdonajxo__link");
+        span.textContent = word;
+
+        li.appendChild(span);
+        ul.appendChild(li);
+      }
+    });
+  };
+
+  const findDerivations = (div: HTMLElement, word: string) => {
+    addOtherMessage(
+      div,
+      "Ĉi tiu vorto ne troveblas en PIV.",
+      "PIValdonajxo__strong"
+    );
+    const searchingWarning = addOtherMessage(
+      div,
+      "Vortoj kun tiu ĉi radiko estas serĉataj.",
+      "sercxataj PIValdonajxo__strong"
+    );
+    const aPromise = makeRequest(word + "a");
+    const oPromise = makeRequest(word + "o");
+    const ePromise = makeRequest(word + "e");
+    const iPromise = makeRequest(word + "i");
+    const promiseArray = [oPromise, aPromise, ePromise, iPromise];
+    Promise.all(promiseArray).then((results) => {
+      searchingWarning.remove();
+      const derivationsExist = results.every(
+        ({ vortoj: words }: akiritaJSONo) => words.length === 0
+      );
+      if (derivationsExist) {
+        addOtherMessage(
+          div,
+          "Vortoj kun tiu ĉi radiko ne troveblas en PIV.",
+          "PIValdonajxo__strong"
+        );
+      } else {
+        addDerivationsLinks(div, results);
+      }
+    });
+  };
+
   const addContentToDiv = (
-    { vortoj: words, pivdok }: akiritaJSONo,
+    { vortoj: words, pivdok, word }: akiritaJSONo,
     div: HTMLElement
   ) => {
     const parser = new DOMParser();
     const pivdokHTML = parser.parseFromString(pivdok, "text/html");
+    div.firstChild.remove();
     if (words[0] === undefined) {
-      addOtherMessage(div, "Ĉi tiu vorto ne troveblas en PIV");
+      findDerivations(div, word);
     } else {
       addDefinitions(div, pivdokHTML, words);
     }
-    body.appendChild(div);
   };
+
   const addConnectionMessage = (div: HTMLElement) => {
     addOtherMessage(
       div,
-      "Ne povis konekti al PIV. Bonvolu kontroli vian konekton."
+      "Ne povis konekti al PIV. Bonvolu kontroli vian konekton.",
+      "PIValdonajxo__strong"
     );
-    body.appendChild(div);
   };
-  const makeRequest = (word: string, div: HTMLElement) => {
+
+  const makeRequest = (word: string): Promise<akiritaJSONo> => {
     const requestObject = {
       s: word,
       fakoj: "",
@@ -81,21 +169,31 @@
     };
     const query = encodeURIComponent(JSON.stringify(requestObject));
     const URLaddress = "https://vortaro.net/py/serchi.py?m=" + query;
-    chrome.runtime.sendMessage({ URLaddress }, (response?: akiritaJSONo) => {
-      if (response) {
-        addContentToDiv(response, div);
-      } else {
-        addConnectionMessage(div);
-      }
-    });
+    return new Promise((res) =>
+      chrome.runtime.sendMessage({ URLaddress }, (response?: akiritaJSONo) =>
+        res({ ...response, word })
+      )
+    );
   };
 
-  const addOtherMessage = (div: HTMLElement, message: string) => {
+  const addWaitingMessage = (div: HTMLElement) => {
     const strong = document.createElement("strong");
-    strong.textContent = message;
+    strong.textContent =
+      "La vorto estas serĉata. Se vi estas devigita longe atendi, bonvolu kontroli vian konekton.";
     div.appendChild(strong);
   };
 
+  const addOtherMessage = (
+    div: HTMLElement,
+    message: string,
+    className?: string
+  ) => {
+    const strong = document.createElement("strong");
+    strong.textContent = message;
+    strong.className = className;
+    div.appendChild(strong);
+    return strong;
+  };
   const addRootDefinitions = (children: ChildNode[], div: HTMLElement) =>
     children.forEach((child) => {
       div.appendChild(child);
@@ -119,6 +217,7 @@
     pivdok: HTMLDocument,
     words: akiritaJSONo["vortoj"]
   ) => {
+    div.classList.add("PIValdonajxo-w-definitions");
     words.forEach(([word]: number[]) => {
       const dword = pivdok.querySelector("#d" + word);
       const kword = pivdok.querySelector("#k" + word);
@@ -152,26 +251,20 @@
     Object.assign(div.style, {
       left: left + "px",
       top: top + "px",
-      position: "absolute",
       background: backgroundLocal.color,
       "border-width": borderLocal.width + "px",
       "border-color": borderLocal.color,
-      "border-style": "solid",
-      width: "300px",
-      height: "300px",
-      padding: "10px",
-      overflowY: "auto",
       fontSize: textLocal.size + "px",
       color: textLocal.color,
-      zIndex: "2147483647",
-      "box-sizing": "border-box",
-      "font-family": '"Open Sans", sans-serif',
-      "line-height": "initial",
-      "vertical-align": "initial",
     });
     div.className = "PIValdonajxo";
     div.setAttribute("number", String(number));
-    makeRequest(word, div);
+    addWaitingMessage(div);
+    body.appendChild(div);
+    const responsePromise = makeRequest(word);
+    responsePromise.then((response: akiritaJSONo | false) =>
+      response ? addContentToDiv(response, div) : addConnectionMessage(div)
+    );
   };
 
   const generateNumber = (target: HTMLElement) => {
@@ -188,23 +281,33 @@
   };
 
   document.addEventListener("mouseup", (e) => {
-    const selection = window.getSelection();
-    const word = selection.toString().trim().toLowerCase();
-    const contElements = [...document.querySelectorAll("[contenteditable]")];
     const element = <HTMLElement>e.target;
-    const isInCont = contElements.some((contElement) =>
-      contElement.contains(element)
-    );
-    if (
-      e.button === 0 &&
-      !selection.isCollapsed &&
-      turnedOnLocally &&
-      /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
-      !isInCont
-    ) {
+    const selection = window.getSelection();
+    if (element.classList.contains("PIValdonajxo__link")) {
+      selection.removeAllRanges();
+      let range = document.createRange();
+      range.selectNode(element);
+      selection.addRange(range);
       const number = generateNumber(element);
-      if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
-        createDiv(selection.getRangeAt(0), number, word);
+      createDiv(range, number, element.innerText);
+      selection.removeRange(range);
+    } else {
+      const word = selection.toString().trim().toLowerCase();
+      const contElements = [...document.querySelectorAll("[contenteditable]")];
+      const isInCont = contElements.some((contElement) =>
+        contElement.contains(element)
+      );
+      if (
+        e.button === 0 &&
+        !selection.isCollapsed &&
+        turnedOnLocally &&
+        /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
+        !isInCont
+      ) {
+        const number = generateNumber(element);
+        if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
+          createDiv(selection.getRangeAt(0), number, word);
+        }
       }
     }
   });
@@ -232,23 +335,6 @@
         .find((element) => element.contains(target))
         ?.getAttribute("number")
     ) || 0;
-
-  // window.addEventListener(
-  //   "scroll",
-  //   (e) => {
-  //     if (turnedOnLocally && document.querySelector(".PIValdonajxo")) {
-  //       const addonElements = [...document.querySelectorAll(".PIValdonajxo")];
-  //       const bound = getNumber(addonElements, e.target as HTMLElement);
-  //       if (bound > 0) {
-  //         deleteSubelements(addonElements, bound);
-  //       } else {
-  //         deleteAllElements(addonElements);
-  //       }
-  //       removeSelection();
-  //     }
-  //   },
-  //   true
-  // );
 
   document.addEventListener("mousedown", (e) => {
     const contElements = [...document.querySelectorAll("[contenteditable]")];
@@ -299,7 +385,6 @@
           background: backgroundLocal.color,
           "border-width": borderLocal.width + "px",
           "border-color": borderLocal.color,
-          "border-style": "solid",
           fontSize: textLocal.size + "px",
           color: textLocal.color,
         });

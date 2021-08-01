@@ -11,27 +11,55 @@
     const createStyle = () => {
         const style = document.createElement("style");
         style.textContent = `
-    .PIValdonajxo *:not(sub, sup)  {
+    .PIValdonajxo {
+      z-index: 2147483647 !important;
+      box-sizing: border-box !important;
+      font-family: "Open Sans", sans-serif !important;
+      line-height: 1.25em !important;
+      vertical-align: initial !important;
+      position: absolute !important;
+      overflow-y: auto !important;
+      border-style: solid !important;
+      width: 300px !important;
+      height: 300px !important;
+      padding: 10px !important;
+    }
+    .PIValdonajxo * {
+      font: revert !important;
+    }
+    .PIValdonajxo-w-definitions *:not(sub, sup) {
       opacity: 1 !important;
       display: inline !important;
       visibility: visible !important;
       position: relative !important;
-      line-height: initial !important;
+      line-height: 1.25em !important;
       vertical-align: initial !important;
-      font: revert;
     }
-    .PIValdonajxo sup, .PIValdonajxo sub {
+    .PIValdonajxo-w-definitions sup, .PIValdonajxo sub {
       opacity: 1 !important;
       display: inline !important;
       visibility: visible !important;
       position: relative !important;
       font-size: smaller !important;
+      line-height: 1.25em !important;
+      vertical-align: baseline !important;
     }
-    .PIValdonajxo sup {
-      vertical-align: super !important;
+    .PIValdonajxo-w-definitions sup {
+      top: -0.5em !important;
     }  
-    .PIValdonajxo sub {
-      vertical-align: sub !important;
+    .PIValdonajxo-w-definitions sub {
+      bottom: -0.5em !important;
+    }
+    .PIValdonajxo__link {
+      user-select: non !important;
+      text-decoration: underline !important;
+      cursor: pointer !important;
+    }
+    .PIValdonajxo__strong {
+      display: block !important;
+    }
+    .PIValdonajxo__list {
+      list-style: initial !important;
     }
   `;
         head.appendChild(style);
@@ -47,22 +75,59 @@
         body.appendChild(relativeDiv);
     };
     createRelativeDiv();
-    const addContentToDiv = ({ vortoj: words, pivdok }, div) => {
+    const addDerivationsLinks = (div, results) => {
+        addOtherMessage(div, "Jen vortoj kun tiu ĉi radiko:", "PIValdonajxo__strong");
+        let ul;
+        results.forEach(({ vortoj: words, word }, index) => {
+            if (words[0]) {
+                if (index === 0) {
+                    ul = document.createElement("ul");
+                    ul.classList.add("PIValdonajxo__list");
+                    div.appendChild(ul);
+                }
+                const li = document.createElement("li");
+                const span = document.createElement("span");
+                span.classList.add("PIValdonajxo__link");
+                span.textContent = word;
+                li.appendChild(span);
+                ul.appendChild(li);
+            }
+        });
+    };
+    const findDerivations = (div, word) => {
+        addOtherMessage(div, "Ĉi tiu vorto ne troveblas en PIV.", "PIValdonajxo__strong");
+        const searchingWarning = addOtherMessage(div, "Vortoj kun tiu ĉi radiko estas serĉataj.", "sercxataj PIValdonajxo__strong");
+        const aPromise = makeRequest(word + "a");
+        const oPromise = makeRequest(word + "o");
+        const ePromise = makeRequest(word + "e");
+        const iPromise = makeRequest(word + "i");
+        const promiseArray = [oPromise, aPromise, ePromise, iPromise];
+        Promise.all(promiseArray).then((results) => {
+            searchingWarning.remove();
+            const derivationsExist = results.every(({ vortoj: words }) => words.length === 0);
+            if (derivationsExist) {
+                addOtherMessage(div, "Vortoj kun tiu ĉi radiko ne troveblas en PIV.", "PIValdonajxo__strong");
+            }
+            else {
+                addDerivationsLinks(div, results);
+            }
+        });
+    };
+    const addContentToDiv = ({ vortoj: words, pivdok, word }, div) => {
         const parser = new DOMParser();
         const pivdokHTML = parser.parseFromString(pivdok, "text/html");
+        div.firstChild.remove();
         if (words[0] === undefined) {
-            addOtherMessage(div, "Ĉi tiu vorto ne troveblas en PIV");
+            findDerivations(div, word);
         }
         else {
             addDefinitions(div, pivdokHTML, words);
         }
-        body.appendChild(div);
     };
     const addConnectionMessage = (div) => {
-        addOtherMessage(div, "Ne povis konekti al PIV. Bonvolu kontroli vian konekton.");
-        body.appendChild(div);
+        addOtherMessage(div, "Ne povis konekti al PIV. Bonvolu kontroli vian konekton.", "PIValdonajxo__strong");
     };
-    const makeRequest = (word, div) => {
+    const makeRequest = (word) => {
         const requestObject = {
             s: word,
             fakoj: "",
@@ -74,21 +139,22 @@
         };
         const query = encodeURIComponent(JSON.stringify(requestObject));
         const URLaddress = "https://vortaro.net/py/serchi.py?m=" + query;
-        browser.runtime
+        return browser.runtime
             .sendMessage({ URLaddress })
-            .then((response) => {
-            if (response) {
-                addContentToDiv(response, div);
-            }
-            else {
-                addConnectionMessage(div);
-            }
-        });
+            .then((response) => (Object.assign(Object.assign({}, response), { word })));
     };
-    const addOtherMessage = (div, message) => {
+    const addWaitingMessage = (div) => {
+        const strong = document.createElement("strong");
+        strong.textContent =
+            "La vorto estas serĉata. Se vi estas devigita longe atendi, bonvolu kontroli vian konekton.";
+        div.appendChild(strong);
+    };
+    const addOtherMessage = (div, message, className) => {
         const strong = document.createElement("strong");
         strong.textContent = message;
+        strong.className = className;
         div.appendChild(strong);
+        return strong;
     };
     const addRootDefinitions = (children, div) => children.forEach((child) => {
         div.appendChild(child);
@@ -100,6 +166,7 @@
         }
     });
     const addDefinitions = (div, pivdok, words) => {
+        div.classList.add("PIValdonajxo-w-definitions");
         words.forEach(([word]) => {
             const dword = pivdok.querySelector("#d" + word);
             const kword = pivdok.querySelector("#k" + word);
@@ -126,26 +193,18 @@
         Object.assign(div.style, {
             left: left + "px",
             top: top + "px",
-            position: "absolute",
             background: backgroundLocal.color,
             "border-width": borderLocal.width + "px",
             "border-color": borderLocal.color,
-            "border-style": "solid",
-            width: "300px",
-            height: "300px",
-            padding: "10px",
-            overflowY: "auto",
             fontSize: textLocal.size + "px",
             color: textLocal.color,
-            zIndex: "2147483647",
-            "box-sizing": "border-box",
-            "font-family": '"Open Sans", sans-serif',
-            "line-height": "initial",
-            "vertical-align": "initial",
         });
         div.className = "PIValdonajxo";
         div.setAttribute("number", String(number));
-        makeRequest(word, div);
+        addWaitingMessage(div);
+        body.appendChild(div);
+        const responsePromise = makeRequest(word);
+        responsePromise.then((response) => response ? addContentToDiv(response, div) : addConnectionMessage(div));
     };
     const generateNumber = (target) => {
         var _a;
@@ -157,18 +216,29 @@
     };
     document.addEventListener("mouseup", (e) => {
         const selection = window.getSelection();
-        const word = selection.toString().trim().toLowerCase();
-        const contElements = [...document.querySelectorAll("[contenteditable]")];
         const element = e.target;
-        const isInCont = contElements.some((contElement) => contElement.contains(element));
-        if (e.button === 0 &&
-            !selection.isCollapsed &&
-            turnedOnLocally &&
-            /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
-            !isInCont) {
+        if (element.classList.contains("PIValdonajxo__link")) {
+            selection.removeAllRanges();
+            let range = document.createRange();
+            range.selectNode(element);
+            selection.addRange(range);
             const number = generateNumber(element);
-            if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
-                createDiv(selection.getRangeAt(0), number, word);
+            createDiv(range, number, element.innerText);
+            selection.removeRange(range);
+        }
+        else {
+            const contElements = [...document.querySelectorAll("[contenteditable]")];
+            const word = selection.toString().trim().toLowerCase();
+            const isInCont = contElements.some((contElement) => contElement.contains(element));
+            if (e.button === 0 &&
+                !selection.isCollapsed &&
+                turnedOnLocally &&
+                /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
+                !isInCont) {
+                const number = generateNumber(element);
+                if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
+                    createDiv(selection.getRangeAt(0), number, word);
+                }
             }
         }
     });

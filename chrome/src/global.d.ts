@@ -8,4 +8,5 @@ declare interface akiritaJSONo {
   artikoloj_tute: number;
   pivdok: string;
   vortoj: number[][];
+  word?: string;
 }
