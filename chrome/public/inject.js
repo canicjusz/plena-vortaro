@@ -51,7 +51,6 @@
       bottom: -0.5em !important;
     }
     .PIValdonajxo__link {
-      user-select: non !important;
       text-decoration: underline !important;
       cursor: pointer !important;
     }
