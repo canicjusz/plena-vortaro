@@ -55,7 +55,7 @@ archive_chrome_addon.directory("./chrome/public", false);
 archive_firefox_source.pipe(path_firefox_source);
 archive_chrome_source.pipe(path_chrome_source);
 archive_firefox_addon.pipe(path_firefox_addon);
-archive_firefox_addon.pipe(path_chrome_addon);
+archive_chrome_addon.pipe(path_chrome_addon);
 
 archive_firefox_source.finalize();
 archive_chrome_source.finalize();
