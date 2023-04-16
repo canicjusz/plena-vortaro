@@ -33,5 +33,5 @@
     }
   },
   "author": "Jan Michalak",
-  "permissions": ["storage", "https://vortaro.net/*"]
+  "permissions": ["storage", "contextMenus", "https://vortaro.net/*"]
 }

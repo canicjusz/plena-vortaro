@@ -260,11 +260,11 @@
     margin: 0
     padding: 0
     font-size: 16px
+    font-family: 'Open-sans', sans-serif
   main
     background: $gray
     padding: 10px
     display: flex
-    font-family: "Open Sans", sans-serif
   .settings
     display: flex
     flex-direction: column

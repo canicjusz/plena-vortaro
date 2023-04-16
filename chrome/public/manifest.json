@@ -2,7 +2,7 @@
   "name": "Plena Vortaro",
   "description": "Ĉi tio estas neoficiala aldonaĵo de PIV.",
   "version": "1.3.1",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "icons": {
     "16": "icons/on_16.png",
     "32": "icons/on_32.png",
@@ -16,9 +16,10 @@
     }
   ],
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "service_worker.js",
+    "type": "module"
   },
-  "browser_action": {
+  "action": {
     "default_title": "Plena Vortaro",
     "default_popup": "popup/index.html",
     "default_icon": {
@@ -28,5 +29,6 @@
     }
   },
   "author": "Jan Michalak",
-  "permissions": ["storage", "https://vortaro.net/*"]
+  "permissions": ["storage", "contextMenus"],
+  "host_permissions": ["https://vortaro.net/*"]
 }

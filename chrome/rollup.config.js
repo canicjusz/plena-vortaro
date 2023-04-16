@@ -104,9 +104,9 @@ export default [
     },
   },
   {
-    input: "src/background.ts",
+    input: "src/service_worker.ts",
     output: {
-      file: "public/background.js",
+      file: "public/service_worker.js",
       format: "cjs",
     },
     plugins: [

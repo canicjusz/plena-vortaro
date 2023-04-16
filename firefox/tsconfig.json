@@ -1,9 +1,10 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "types": ["firefox-webext-browser", "svelte"],
+    // "types": ["chrome", "svelte"],
+    "typeRoots": ["node_modules/@types"],
     "isolatedModules": false,
-    "target": "es2015",
+    "target": "ES2018",
     "removeComments": true
   },
   "include": ["src/**/*"],

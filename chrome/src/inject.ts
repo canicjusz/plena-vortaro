@@ -1,7 +1,7 @@
 (() => {
   let relativeDiv: HTMLElement;
+  let root: ShadowRoot;
   const body = document.body;
-  const head = document.head;
   let turnedOnLocally = true;
   let backgroundLocal = { color: "#f8ebe8" };
   let textLocal = { color: "#000", size: 15 };
@@ -9,60 +9,67 @@
   const createStyle = () => {
     const style = document.createElement("style");
     style.textContent = `
+    html, body, div, span, applet, object, iframe,
+    h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+    a, abbr, acronym, address, big, cite, code,
+    del, dfn, em, img, ins, kbd, q, s, samp,
+    small, strike, strong, sub, sup, tt, var,
+    b, u, i, center,
+    dl, dt, dd, ol, ul, li,
+    fieldset, form, label, legend,
+    table, caption, tbody, tfoot, thead, tr, th, td,
+    article, aside, canvas, details, embed, 
+    figure, figcaption, footer, header, hgroup, 
+    menu, nav, output, ruby, section, summary,
+    time, mark, audio, video {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 100%;
+      font: inherit;
+      vertical-align: baseline;
+    }
+    /* HTML5 display-role reset for older browsers */
+    article, aside, details, figcaption, figure, 
+    footer, header, hgroup, menu, nav, section {
+      display: block;
+    }
+    body {
+      line-height: 1;
+    }
+    ol, ul {
+      list-style: none;
+    }
+    blockquote, q {
+      quotes: none;
+    }
+    blockquote:before, blockquote:after,
+    q:before, q:after {
+      content: '';
+      content: none;
+    }
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+    .PIValdonajxo * {
+      all: revert !important;
+    }
     .PIValdonajxo {
       z-index: 2147483647 !important;
       box-sizing: border-box !important;
-      font-family: "Open Sans", sans-serif !important;
-      line-height: 1.25em !important;
-      vertical-align: initial !important;
       position: absolute !important;
       overflow-y: auto !important;
       border-style: solid !important;
       width: 300px !important;
       height: 300px !important;
       padding: 10px !important;
-    }
-    .PIValdonajxo * {
-      font: revert !important;
-    }
-    .PIValdonajxo-w-definitions *:not(sub, sup) {
-      opacity: 1 !important;
-      display: inline !important;
-      visibility: visible !important;
-      position: relative !important;
-      line-height: 1.25em !important;
-      vertical-align: initial !important;
-    }
-    .PIValdonajxo-w-definitions sup, .PIValdonajxo sub {
-      opacity: 1 !important;
-      display: inline !important;
-      visibility: visible !important;
-      position: relative !important;
-      font-size: smaller !important;
-      line-height: 1.25em !important;
-      vertical-align: baseline !important;
-    }
-    .PIValdonajxo-w-definitions sup {
-      top: -0.5em !important;
-    }  
-    .PIValdonajxo-w-definitions sub {
-      bottom: -0.5em !important;
-    }
-    .PIValdonajxo__link {
-      text-decoration: underline !important;
-      cursor: pointer !important;
-    }
-    .PIValdonajxo__strong {
-      display: block !important;
-    }
-    .PIValdonajxo__list {
-      list-style: initial !important;
+      font-family: 'Open-sans', sans-serif !important;
+      line-height: 1.5 !important;
     }
   `;
-    head.appendChild(style);
+    root.appendChild(style);
   };
-
-  createStyle();
 
   const createRelativeDiv = () => {
     relativeDiv = document.createElement("div");
@@ -71,7 +78,11 @@
       top: "0",
       left: "0",
     });
+    relativeDiv.classList.add("PIValdonajxo-root");
     body.appendChild(relativeDiv);
+    relativeDiv.attachShadow({ mode: "open" });
+    root = relativeDiv.shadowRoot;
+    createStyle();
   };
 
   createRelativeDiv();
@@ -118,10 +129,10 @@
     const ePromise = makeRequest(word + "e");
     const iPromise = makeRequest(word + "i");
     const promiseArray = [oPromise, aPromise, ePromise, iPromise];
-    Promise.all(promiseArray).then((results) => {
+    Promise.all(promiseArray).then((results: akiritaJSONo[]) => {
       searchingWarning.remove();
       const derivationsExist = results.every(
-        ({ vortoj: words }: akiritaJSONo) => words.length === 0
+        ({ vortoj: words }) => words.length === 0
       );
       if (derivationsExist) {
         addOtherMessage(
@@ -157,7 +168,7 @@
     );
   };
 
-  const makeRequest = (word: string): Promise<akiritaJSONo> => {
+  const makeRequest = (word: string) => {
     const requestObject = {
       s: word,
       fakoj: "",
@@ -194,6 +205,7 @@
     div.appendChild(strong);
     return strong;
   };
+
   const addRootDefinitions = (children: ChildNode[], div: HTMLElement) =>
     children.forEach((child) => {
       div.appendChild(child);
@@ -243,11 +255,15 @@
       : rangeRect.left - divRect.left;
 
   const createDiv = (range: Range, number: number, word: string) => {
+    if (!document.querySelector(".PIValdonajxo-root")) {
+      createRelativeDiv();
+    }
     const divRect = relativeDiv.getBoundingClientRect();
     const rangeRect = range.getBoundingClientRect();
     const div = document.createElement("div");
     const top = getTop(divRect, rangeRect);
     const left = getLeft(divRect, rangeRect);
+
     Object.assign(div.style, {
       left: left + "px",
       top: top + "px",
@@ -260,52 +276,42 @@
     div.className = "PIValdonajxo";
     div.setAttribute("number", String(number));
     addWaitingMessage(div);
-    body.appendChild(div);
+    root.appendChild(div);
     const responsePromise = makeRequest(word);
     responsePromise.then((response: akiritaJSONo | false) =>
       response ? addContentToDiv(response, div) : addConnectionMessage(div)
     );
   };
 
-  const generateNumber = (target: HTMLElement) => {
-    const addonElements = [
-      ...document.querySelectorAll<HTMLElement>(".PIValdonajxo"),
-    ];
-    return (
-      Number(
-        addonElements
-          .find((element) => element.contains(target))
-          ?.getAttribute("number")
-      ) + 1 || 1
-    );
-  };
-
   document.addEventListener("mouseup", (e) => {
+    let selection = window.getSelection();
     const element = <HTMLElement>e.target;
-    const selection = window.getSelection();
+    const originalTarget = e.composedPath()[0];
+    const number = element === root.host ? getNumber(originalTarget) + 1 : 1;
     if (element.classList.contains("PIValdonajxo__link")) {
       selection.removeAllRanges();
       let range = document.createRange();
       range.selectNode(element);
       selection.addRange(range);
-      const number = generateNumber(element);
       createDiv(range, number, element.innerText);
       selection.removeRange(range);
     } else {
-      const word = selection.toString().trim().toLowerCase();
       const contElements = [...document.querySelectorAll("[contenteditable]")];
+      const word = selection.toString().trim().toLowerCase();
       const isInCont = contElements.some((contElement) =>
         contElement.contains(element)
       );
       if (
         e.button === 0 &&
-        !selection.isCollapsed &&
+        selection.type === "Range" &&
         turnedOnLocally &&
         /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
         !isInCont
       ) {
-        const number = generateNumber(element);
-        if (!document.querySelector('.PIValdonajxo[number="' + number + '"]')) {
+        if (selection.type === "Range" && selection.isCollapsed) {
+          selection = root.getSelection();
+        }
+        if (!root.querySelector('.PIValdonajxo[number="' + number + '"]')) {
           createDiv(selection.getRangeAt(0), number, word);
         }
       }
@@ -329,29 +335,66 @@
       selection.removeAllRanges();
     }
   };
-  const getNumber = (elements: Element[], target: HTMLElement) =>
-    Number(
-      elements
-        .find((element) => element.contains(target))
-        ?.getAttribute("number")
-    ) || 0;
+  const getNumber = (target: EventTarget) => {
+    let element = <HTMLElement>target;
+    while (!element.classList.contains("PIValdonajxo")) {
+      element = element.parentElement;
+    }
+    return +element.getAttribute("number");
+  };
 
   document.addEventListener("mousedown", (e) => {
     const contElements = [...document.querySelectorAll("[contenteditable]")];
+    const originalTarget = e.composedPath()[0];
     const element = <HTMLElement>e.target;
     const isInCont = contElements.some((contElement) =>
       contElement.contains(element)
     );
     if (e.button === 0 && turnedOnLocally && !isInCont) {
-      const addonElements = [...document.querySelectorAll(".PIValdonajxo")];
-      const bound = getNumber(addonElements, element);
-      if (bound > 0) {
+      const addonElements = [...root.querySelectorAll(".PIValdonajxo")];
+      if (element === root.host) {
+        const bound = getNumber(originalTarget);
         deleteSubelements(addonElements, bound);
       } else {
         deleteAllElements(addonElements);
       }
       removeSelection();
     }
+  });
+
+  //todo: na chuj ten removeSelection tu jest
+
+  //todo: repetition:
+  // const contElements = [...document.querySelectorAll("[contenteditable]")];
+  // const isInCont = contElements.some((contElement) =>
+  //   contElement.contains(element)
+  // );
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    let selection = window.getSelection();
+    let focusNode = selection.focusNode;
+    let number = 1;
+    const addonElements = [...root.querySelectorAll(".PIValdonajxo")];
+    if (selection.type === "Range" && selection.isCollapsed) {
+      selection = root.getSelection();
+      focusNode = selection.focusNode;
+    }
+    const word = selection.toString().trim().toLowerCase();
+    const contElements = [...document.querySelectorAll("[contenteditable]")];
+    const isInCont = contElements.some((contElement) =>
+      contElement.contains(focusNode.parentElement)
+    );
+    if (turnedOnLocally && /^[À-ž\w\d\s.,\-;]+$/.test(word) && !isInCont) {
+      if (selection.type === "Range" && selection.isCollapsed) {
+        const bound = getNumber(focusNode.parentElement);
+        number = bound + 1;
+        deleteSubelements(addonElements, bound);
+      } else {
+        deleteAllElements(addonElements);
+      }
+      createDiv(selection.getRangeAt(0), number, word);
+    }
+    // return true <- this and the callback in background.js are what caused a crash in extensions page of my Google chrome
   });
 
   chrome.storage.sync.get(
@@ -366,20 +409,20 @@
       }
     }
   );
+
   chrome.storage.onChanged.addListener(
     ({ turnedOn, background, text, border }) => {
       if (turnedOn) {
         turnedOnLocally = turnedOn.newValue;
         if (turnedOnLocally === false) {
-          const addonElements = document.querySelectorAll(".PIValdonajxo");
+          const addonElements = root.querySelectorAll(".PIValdonajxo");
           deleteAllElements(addonElements);
         }
       }
       if (background) backgroundLocal = background.newValue;
       if (text) textLocal = text.newValue;
       if (border) borderLocal = border.newValue;
-      const addonElements =
-        document.querySelectorAll<HTMLElement>(".PIValdonajxo");
+      const addonElements = root.querySelectorAll<HTMLElement>(".PIValdonajxo");
       addonElements.forEach((element) => {
         Object.assign(element.style, {
           background: backgroundLocal.color,

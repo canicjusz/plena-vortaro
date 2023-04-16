@@ -15,23 +15,23 @@
 
   const updateIcons = () => {
     if (turnedOnLocally) {
-      chrome.browserAction.setIcon({
+      chrome.action.setIcon({
         path: {
           "16": "icons/on_16.png",
           "32": "icons/on_32.png",
           "128": "icons/on_128.png",
         },
       });
-      chrome.browserAction.setTitle({ title: "Aldono ŝaltita" });
+      chrome.action.setTitle({ title: "Aldono ŝaltita" });
     } else {
-      chrome.browserAction.setIcon({
+      chrome.action.setIcon({
         path: {
           "16": "icons/off_16.png",
           "32": "icons/off_32.png",
           "128": "icons/off_128.png",
         },
       });
-      chrome.browserAction.setTitle({ title: "Aldono malŝaltita" });
+      chrome.action.setTitle({ title: "Aldono malŝaltita" });
     }
   };
 
@@ -50,5 +50,16 @@
     chrome.tabs.create({
       url: chrome.runtime.getURL("install/index.html"),
     });
+  });
+  chrome.contextMenus.create(
+    {
+      id: "log-selection",
+      title: "Montri la difinojn",
+      contexts: ["selection"],
+    },
+    function () {}
+  );
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    chrome.tabs.sendMessage(tab.id, info);
   });
 })();

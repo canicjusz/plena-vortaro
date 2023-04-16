@@ -49,4 +49,15 @@
       url: browser.runtime.getURL("install/index.html"),
     });
   });
+  browser.contextMenus.create(
+    {
+      id: "log-selection",
+      title: "Montri la difinojn",
+      contexts: ["selection"],
+    },
+    function () {}
+  );
+  browser.contextMenus.onClicked.addListener((info, tab) => {
+    browser.tabs.sendMessage(tab.id, info);
+  });
 })();
