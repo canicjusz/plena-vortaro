@@ -4,23 +4,29 @@
       color: string;
     },
     backgroundLocal = { color: "#f8ebe8" };
+
   export let textSaved: {
       color: string;
       size: number;
     },
     textLocal = { color: "#000", size: 15 };
+
   export let borderSaved: {
       color: string;
       width: number;
     },
     borderLocal = { color: "#000", width: 1 };
+
   export let turnedOnLocally = true;
+
   const copyLocal = () => {
     backgroundSaved = { ...backgroundLocal };
     textSaved = { ...textLocal };
     borderSaved = { ...borderLocal };
   };
+
   copyLocal();
+
   export const changeSettings = () => {
     copyLocal();
     chrome.storage.sync.set({
@@ -29,10 +35,12 @@
       border: borderLocal,
     });
   };
+
   export const turnOff = () => {
     turnedOnLocally = !turnedOnLocally;
     chrome.storage.sync.set({ turnedOn: turnedOnLocally });
   };
+
   chrome.storage.sync.get(
     ["background", "text", "border", "turnedOn"],
     ({ background, text, border, turnedOn }) => {
@@ -48,6 +56,7 @@
       }
     }
   );
+
   $: somethingChanged = !(
     backgroundLocal.color === backgroundSaved.color &&
     textLocal.color === textSaved.color &&

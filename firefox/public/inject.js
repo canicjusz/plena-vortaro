@@ -1,14 +1,25 @@
 'use strict';
 
 (() => {
-    let relativeDiv;
-    const body = document.body;
+    let rootContainer;
     let root;
-    let turnedOnLocally = true;
-    let backgroundLocal = { color: "#f8ebe8" };
-    let textLocal = { color: "#000", size: 15 };
-    let borderLocal = { color: "#000", width: 1 };
-    const createStyle = () => {
+    const body = document.body;
+    createRootContainer();
+    const local = {
+        background: {
+            color: "#f8ebe8",
+        },
+        text: {
+            color: "#000",
+            size: 15,
+        },
+        border: {
+            color: "#000",
+            width: 1,
+        },
+        turnedOn: true,
+    };
+    function createStyle() {
         const style = document.createElement("style");
         style.textContent = `
     html, body, div, span, applet, object, iframe,
@@ -55,7 +66,7 @@
       border-spacing: 0;
     }
     .PIValdonajxo * {
-      all: revert !important;
+      all: revert;
     }
     .PIValdonajxo {
       z-index: 2147483647 !important;
@@ -69,77 +80,75 @@
       font-family: 'Open-sans', sans-serif !important;
       line-height: 1.5 !important;
     }
+    .PIValdonajxo__link {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .PIValdonajxo__list {
+      margin: 0;
+    }
   `;
         root.appendChild(style);
-    };
-    const createRelativeDiv = () => {
-        relativeDiv = document.createElement("div");
-        Object.assign(relativeDiv.style, {
+    }
+    function createRootContainer() {
+        rootContainer = document.createElement("div");
+        Object.assign(rootContainer.style, {
             position: "absolute",
             top: "0",
             left: "0",
         });
-        relativeDiv.classList.add("PIValdonajxo-root");
-        body.appendChild(relativeDiv);
-        relativeDiv.attachShadow({ mode: "open" });
-        root = relativeDiv.shadowRoot;
+        rootContainer.classList.add("PIValdonajxo-root");
+        body.appendChild(rootContainer);
+        rootContainer.attachShadow({ mode: "open" });
+        root = rootContainer.shadowRoot;
         createStyle();
-    };
-    createRelativeDiv();
-    const addDerivationsLinks = (div, results) => {
-        addOtherMessage(div, "Jen vortoj kun tiu ĉi radiko:", "PIValdonajxo__strong");
-        let ul;
-        results.forEach(({ vortoj: words, word }, index) => {
-            if (words[0]) {
-                if (index === 0) {
-                    ul = document.createElement("ul");
-                    ul.classList.add("PIValdonajxo__list");
-                    div.appendChild(ul);
-                }
-                const li = document.createElement("li");
-                const span = document.createElement("span");
-                span.classList.add("PIValdonajxo__link");
-                span.textContent = word;
-                li.appendChild(span);
-                ul.appendChild(li);
-            }
+    }
+    function addDerivationsLinks(definitionContainer, results) {
+        createStrongElement(definitionContainer, " Jen vortoj kun tiu ĉi radiko:", "PIValdonajxo__strong");
+        const ul = document.createElement("ul");
+        ul.classList.add("PIValdonajxo__list");
+        definitionContainer.appendChild(ul);
+        results.forEach(({ word }) => {
+            const li = document.createElement("li");
+            const span = document.createElement("span");
+            span.classList.add("PIValdonajxo__link");
+            span.textContent = word;
+            li.appendChild(span);
+            ul.appendChild(li);
         });
-    };
-    const findDerivations = (div, word) => {
-        addOtherMessage(div, "Ĉi tiu vorto ne troveblas en PIV.", "PIValdonajxo__strong");
-        const searchingWarning = addOtherMessage(div, "Vortoj kun tiu ĉi radiko estas serĉataj.", "sercxataj PIValdonajxo__strong");
-        const aPromise = makeRequest(word + "a");
-        const oPromise = makeRequest(word + "o");
-        const ePromise = makeRequest(word + "e");
-        const iPromise = makeRequest(word + "i");
-        const promiseArray = [oPromise, aPromise, ePromise, iPromise];
+    }
+    function findDerivations(definitionContainer, word) {
+        createStrongElement(definitionContainer, "Ĉi tiu vorto ne troveblas en PIV.", "PIValdonajxo__strong");
+        const searchingWarning = createStrongElement(definitionContainer, " Vortoj kun tiu ĉi radiko estas serĉataj.", "sercxataj PIValdonajxo__strong");
+        const suffixes = ["a", "o", "e", "i"];
+        const promiseArray = suffixes.map((suffix) => makeRequest(word + suffix));
         Promise.all(promiseArray).then((results) => {
             searchingWarning.remove();
-            const derivationsExist = results.every(({ vortoj: words }) => words.length === 0);
+            const derivationsExist = results.every(({ artikoloj: articles_number }) => articles_number);
             if (derivationsExist) {
-                addOtherMessage(div, "Vortoj kun tiu ĉi radiko ne troveblas en PIV.", "PIValdonajxo__strong");
+                addDerivationsLinks(definitionContainer, results);
             }
             else {
-                addDerivationsLinks(div, results);
+                createStrongElement(definitionContainer, " Vortoj kun tiu ĉi radiko ne troveblas en PIV.", "PIValdonajxo__strong");
             }
         });
-    };
-    const addContentToDiv = ({ vortoj: words, pivdok, word }, div) => {
+    }
+    function parseHTML(html) {
         const parser = new DOMParser();
-        const pivdokHTML = parser.parseFromString(pivdok, "text/html");
-        div.firstChild.remove();
-        if (words[0] === undefined) {
-            findDerivations(div, word);
+        return parser.parseFromString(html, "text/html");
+    }
+    function addContent({ vortoj: words, pivdok, word }, definitionContainer) {
+        const pivdokHTML = parseHTML(pivdok);
+        definitionContainer.firstChild.remove();
+        if (words.length) {
+            addDefinitions(definitionContainer, pivdokHTML, words);
         }
         else {
-            addDefinitions(div, pivdokHTML, words);
+            findDerivations(definitionContainer, word);
         }
-    };
-    const addConnectionMessage = (div) => {
-        addOtherMessage(div, "Ne povis konekti al PIV. Bonvolu kontroli vian konekton.", "PIValdonajxo__strong");
-    };
-    const makeRequest = (word) => {
-        const requestObject = {
+    }
+    function makeRequest(word) {
+        const queryObject = {
             s: word,
             fakoj: "",
             kap: true,
@@ -148,200 +157,212 @@
             uskle: false,
             artikoloj_jamaj: 0,
         };
-        const query = encodeURIComponent(JSON.stringify(requestObject));
-        const URLaddress = "https://vortaro.net/py/serchi.py?m=" + query;
+        const queryString = encodeURIComponent(JSON.stringify(queryObject));
+        const URLaddress = "https://vortaro.net/py/serchi.py?m=" + queryString;
         return browser.runtime
             .sendMessage({ URLaddress })
             .then((response) => ({ ...response, word }));
-    };
-    const addWaitingMessage = (div) => {
-        const strong = document.createElement("strong");
-        strong.textContent =
-            "La vorto estas serĉata. Se vi estas devigita longe atendi, bonvolu kontroli vian konekton.";
-        div.appendChild(strong);
-    };
-    const addOtherMessage = (div, message, className) => {
+    }
+    function createStrongElement(definitionContainer, message, className) {
         const strong = document.createElement("strong");
         strong.textContent = message;
         strong.className = className;
-        div.appendChild(strong);
+        definitionContainer.appendChild(strong);
         return strong;
-    };
-    const addRootDefinitions = (children, div) => children.forEach((child) => {
-        div.appendChild(child);
-    });
-    const addDerivationsDefinitons = (children, div) => children.forEach((child) => {
-        if ((child.nodeType === 1 && !child.classList.contains("derivajho")) ||
-            child.nodeType === 3) {
-            div.appendChild(child);
-        }
-    });
-    const addDefinitions = (div, pivdok, words) => {
-        div.classList.add("PIValdonajxo-w-definitions");
+    }
+    function addDefinitions(definitionContainer, pivdok, words) {
+        definitionContainer.classList.add("PIValdonajxo-w-definitions");
         words.forEach(([word]) => {
-            const dword = pivdok.querySelector("#d" + word);
-            const kword = pivdok.querySelector("#k" + word);
-            if (dword && dword.parentElement) {
-                addRootDefinitions([...dword.parentElement.childNodes], div);
+            const derivation = pivdok.querySelector("#d" + word);
+            const headword = pivdok.querySelector("#k" + word);
+            let elements;
+            if (derivation) {
+                elements = [...derivation.parentElement.childNodes];
             }
-            else if (kword && kword.parentElement) {
-                addDerivationsDefinitons([...kword.parentElement.childNodes], div);
+            else if (headword) {
+                elements = [...headword.parentElement.childNodes].filter((el) => !(el.nodeType === 1 && el.classList.contains("derivajho")));
             }
+            elements.forEach((element) => {
+                definitionContainer.appendChild(element);
+            });
         });
-    };
-    const getTop = (divRect, rangeRect) => rangeRect.bottom - divRect.top > document.documentElement.scrollHeight - 300
-        ? rangeRect.top - divRect.bottom - 300
-        : rangeRect.bottom - divRect.top;
-    const getLeft = (divRect, rangeRect) => rangeRect.left - divRect.left > document.documentElement.scrollWidth - 300
-        ? rangeRect.left - divRect.left - 300 + rangeRect.width
-        : rangeRect.left - divRect.left;
-    const createDiv = (range, number, word) => {
+    }
+    const getTop = (elementRect, rangeRect) => rangeRect.bottom - elementRect.top >
+        document.documentElement.scrollHeight - 300
+        ? rangeRect.top - elementRect.bottom - 300
+        : rangeRect.bottom - elementRect.top;
+    const getLeft = (elementRect, rangeRect) => rangeRect.left - elementRect.left >
+        document.documentElement.scrollWidth - 300
+        ? rangeRect.left - elementRect.left - 300 + rangeRect.width
+        : rangeRect.left - elementRect.left;
+    function createDefinitionContainer(range, number, word) {
         if (!document.querySelector(".PIValdonajxo-root")) {
-            createRelativeDiv();
+            createRootContainer();
         }
-        const divRect = relativeDiv.getBoundingClientRect();
+        const rootContainerRect = rootContainer.getBoundingClientRect();
         const rangeRect = range.getBoundingClientRect();
-        const div = document.createElement("div");
-        const top = getTop(divRect, rangeRect);
-        const left = getLeft(divRect, rangeRect);
-        Object.assign(div.style, {
+        const top = getTop(rootContainerRect, rangeRect);
+        const left = getLeft(rootContainerRect, rangeRect);
+        const definitionContainer = document.createElement("div");
+        Object.assign(definitionContainer.style, {
             left: left + "px",
             top: top + "px",
-            background: backgroundLocal.color,
-            "border-width": borderLocal.width + "px",
-            "border-color": borderLocal.color,
-            fontSize: textLocal.size + "px",
-            color: textLocal.color,
+            background: local.background.color,
+            "border-width": local.border.width + "px",
+            "border-color": local.border.color,
+            fontSize: local.text.size + "px",
+            color: local.text.color,
         });
-        div.className = "PIValdonajxo";
-        div.setAttribute("number", String(number));
-        addWaitingMessage(div);
-        root.appendChild(div);
+        definitionContainer.className = "PIValdonajxo";
+        definitionContainer.setAttribute("number", String(number));
+        createStrongElement(definitionContainer, "La vorto estas serĉata. Se vi estas devigita longe atendi, bonvolu kontroli vian konekton.", "PIValdonajxo__strong");
+        root.appendChild(definitionContainer);
         const responsePromise = makeRequest(word);
-        responsePromise.then((response) => response ? addContentToDiv(response, div) : addConnectionMessage(div));
-    };
+        responsePromise.then((response) => response
+            ? addContent(response, definitionContainer)
+            : createStrongElement(definitionContainer, "Ne povis konekti al PIV. Bonvolu kontroli vian konekton.", "PIValdonajxo__strong"));
+    }
+    function isInContentEditable(element) {
+        const contElements = [...document.querySelectorAll("[contenteditable]")];
+        return contElements.some((contElement) => contElement.contains(element));
+    }
+    function isInLatinScript(word) {
+        return /^[À-ž\w\d\s.,\-;]+$/.test(word);
+    }
+    function hasOccuredInRoot(element) {
+        return root.contains(element);
+    }
+    function selectTextArtificially(element) {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        const range = document.createRange();
+        range.selectNode(element);
+        selection.addRange(range);
+        return range;
+    }
     document.addEventListener("mouseup", (e) => {
         const selection = window.getSelection();
-        const element = e.target;
         const originalTarget = e.composedPath()[0];
-        const number = element === root.host ? getNumber(originalTarget) + 1 : 1;
-        if (element.classList.contains("PIValdonajxo__link")) {
+        if (originalTarget.classList.contains("PIValdonajxo__link")) {
+            const number = getNumber(originalTarget) + 1;
+            const range = selectTextArtificially(originalTarget);
+            deleteDefinitionContainer(number);
+            createDefinitionContainer(range, number, originalTarget.innerText);
             selection.removeAllRanges();
-            let range = document.createRange();
-            range.selectNode(element);
-            selection.addRange(range);
-            createDiv(range, number, element.innerText);
-            selection.removeRange(range);
         }
         else {
-            const contElements = [...document.querySelectorAll("[contenteditable]")];
+            const number = hasOccuredInRoot(originalTarget)
+                ? getNumber(originalTarget) + 1
+                : 1;
             const word = selection.toString().trim().toLowerCase();
-            const isInCont = contElements.some((contElement) => contElement.contains(element));
             if (e.button === 0 &&
-                !selection.isCollapsed &&
-                turnedOnLocally &&
-                /^[À-ž\w\d\s.,\-;]+$/.test(word) &&
-                !isInCont) {
-                if (!root.querySelector('.PIValdonajxo[number="' + number + '"]')) {
-                    createDiv(selection.getRangeAt(0), number, word);
-                }
+                selection.type === "Range" &&
+                local.turnedOn &&
+                isInLatinScript(word) &&
+                !isInContentEditable(originalTarget)) {
+                createDefinitionContainer(selection.getRangeAt(0), number, word);
             }
         }
     });
-    const deleteSubelements = (elements, bound) => elements.forEach((element) => {
-        const number = Number(element.getAttribute("number"));
-        if (number > bound) {
+    function deleteDefinitionContainer(bound) {
+        const addonElements = root.querySelectorAll(".PIValdonajxo");
+        addonElements.forEach((element) => {
+            const number = Number(element.getAttribute("number"));
+            if (number > bound) {
+                element.remove();
+            }
+        });
+    }
+    function deleteAllDefinitionContainers() {
+        const addonElements = root.querySelectorAll(".PIValdonajxo");
+        addonElements.forEach((element) => {
             element.remove();
-        }
-    });
-    const deleteAllElements = (elements) => elements.forEach((element) => {
-        element.remove();
-    });
-    const removeSelection = () => {
-        const selection = window.getSelection();
-        if (selection) {
-            selection.removeAllRanges();
-        }
-    };
-    const getNumber = (target) => {
+        });
+    }
+    function getNumber(target) {
         let element = target;
         while (!element.classList.contains("PIValdonajxo")) {
             element = element.parentElement;
         }
         return +element.getAttribute("number");
-    };
+    }
     document.addEventListener("mousedown", (e) => {
-        const contElements = [...document.querySelectorAll("[contenteditable]")];
         const originalTarget = e.composedPath()[0];
-        const element = e.target;
-        const isInCont = contElements.some((contElement) => contElement.contains(element));
-        if (e.button === 0 && turnedOnLocally && !isInCont) {
-            const addonElements = [...root.querySelectorAll(".PIValdonajxo")];
-            if (element === root.host) {
+        if (e.button === 0 &&
+            local.turnedOn &&
+            !isInContentEditable(originalTarget)) {
+            if (hasOccuredInRoot(originalTarget)) {
                 const bound = getNumber(originalTarget);
-                deleteSubelements(addonElements, bound);
+                deleteDefinitionContainer(bound);
             }
             else {
-                deleteAllElements(addonElements);
+                deleteAllDefinitionContainers();
             }
-            removeSelection();
+            const selection = window.getSelection();
+            selection.removeAllRanges();
         }
     });
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    browser.runtime.onMessage.addListener(() => {
         let selection = window.getSelection();
         let focusNode = selection.focusNode;
-        let number = 1;
-        const addonElements = [...root.querySelectorAll(".PIValdonajxo")];
         const word = selection.toString().trim().toLowerCase();
-        const contElements = [...document.querySelectorAll("[contenteditable]")];
-        const isInCont = contElements.some((contElement) => contElement.contains(focusNode.parentElement));
-        if (turnedOnLocally && /^[À-ž\w\d\s.,\-;]+$/.test(word) && !isInCont) {
-            if (root.contains(focusNode.parentElement)) {
-                const bound = getNumber(focusNode.parentElement);
+        if (local.turnedOn &&
+            isInLatinScript(word) &&
+            !isInContentEditable(focusNode)) {
+            let number = 1;
+            const focusNodeParent = focusNode.parentElement;
+            if (hasOccuredInRoot(focusNodeParent)) {
+                const bound = getNumber(focusNodeParent);
                 number = bound + 1;
-                deleteSubelements(addonElements, bound);
+                deleteDefinitionContainer(bound);
             }
             else {
-                deleteAllElements(addonElements);
+                deleteAllDefinitionContainers();
             }
-            createDiv(selection.getRangeAt(0), number, word);
+            createDefinitionContainer(selection.getRangeAt(0), number, word);
         }
     });
-    browser.storage.sync
-        .get(["turnedOn", "background", "text", "border"])
-        .then(({ turnedOn, background, text, border }) => {
+    function setInitSettings({ turnedOn, background, text, border }) {
         if (turnedOn === undefined)
             turnedOn = true;
-        turnedOnLocally = turnedOn;
+        local.turnedOn = turnedOn;
         if (background && text && border) {
-            backgroundLocal = background;
-            textLocal = text;
-            borderLocal = border;
+            local.background = background;
+            local.text = text;
+            local.border = border;
         }
-    });
-    browser.storage.onChanged.addListener(({ turnedOn, background, text, border }) => {
-        if (turnedOn) {
-            turnedOnLocally = turnedOn.newValue;
-            if (turnedOnLocally === false) {
-                const addonElements = root.querySelectorAll(".PIValdonajxo");
-                deleteAllElements(addonElements);
-            }
-        }
-        if (background)
-            backgroundLocal = background.newValue;
-        if (text)
-            textLocal = text.newValue;
-        if (border)
-            borderLocal = border.newValue;
+    }
+    browser.storage.sync
+        .get(["turnedOn", "background", "text", "border"])
+        .then(setInitSettings);
+    function updateDefinitionContainers() {
         const addonElements = root.querySelectorAll(".PIValdonajxo");
         addonElements.forEach((element) => {
             Object.assign(element.style, {
-                background: backgroundLocal.color,
-                "border-width": borderLocal.width + "px",
-                "border-color": borderLocal.color,
-                fontSize: textLocal.size + "px",
-                color: textLocal.color,
+                background: local.background.color,
+                "border-width": local.border.width + "px",
+                "border-color": local.border.color,
+                fontSize: local.text.size + "px",
+                color: local.text.color,
             });
         });
-    });
+    }
+    function updateSettings({ turnedOn, background, text, border, }) {
+        if (turnedOn) {
+            local.turnedOn = turnedOn.newValue;
+            if (!local.turnedOn) {
+                deleteAllDefinitionContainers();
+            }
+        }
+        if (background)
+            local.background = background.newValue;
+        if (text)
+            local.text = text.newValue;
+        if (border)
+            local.border = border.newValue;
+        if (background || text || border) {
+            updateDefinitionContainers();
+        }
+    }
+    browser.storage.onChanged.addListener(updateSettings);
 })();

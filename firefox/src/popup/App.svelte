@@ -1,26 +1,33 @@
 <script lang="ts">
   import ChromaPicker from "svelte-chroma-picker";
+
   export let backgroundSaved: {
       color: string;
     },
     backgroundLocal = { color: "#f8ebe8" };
+
   export let textSaved: {
       color: string;
       size: number;
     },
     textLocal = { color: "#000", size: 15 };
+
   export let borderSaved: {
       color: string;
       width: number;
     },
     borderLocal = { color: "#000", width: 1 };
+
   export let turnedOnLocally = true;
+
   const copyLocal = () => {
     backgroundSaved = { ...backgroundLocal };
     textSaved = { ...textLocal };
     borderSaved = { ...borderLocal };
   };
+
   copyLocal();
+
   export const changeSettings = () => {
     copyLocal();
     browser.storage.sync.set({
@@ -29,10 +36,12 @@
       border: borderLocal,
     });
   };
+
   export const turnOff = () => {
     turnedOnLocally = !turnedOnLocally;
     browser.storage.sync.set({ turnedOn: turnedOnLocally });
   };
+
   browser.storage.sync
     .get(["background", "text", "border", "turnedOn"])
     .then(({ background, text, border, turnedOn }) => {
@@ -47,6 +56,7 @@
         copyLocal();
       }
     });
+
   $: somethingChanged = !(
     backgroundLocal.color === backgroundSaved.color &&
     textLocal.color === textSaved.color &&

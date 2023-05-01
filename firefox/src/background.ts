@@ -40,15 +40,20 @@
     turnedOnLocally = turnedOn;
     updateIcons();
   });
+
   browser.storage.onChanged.addListener(({ turnedOn }) => {
-    turnedOnLocally = turnedOn.newValue;
-    updateIcons();
+    if (turnedOn) {
+      turnedOnLocally = turnedOn.newValue;
+      updateIcons();
+    }
   });
+
   browser.runtime.onInstalled.addListener(() => {
     browser.tabs.create({
       url: browser.runtime.getURL("install/index.html"),
     });
   });
+
   browser.contextMenus.create(
     {
       id: "log-selection",
@@ -57,6 +62,7 @@
     },
     function () {}
   );
+
   browser.contextMenus.onClicked.addListener((info, tab) => {
     browser.tabs.sendMessage(tab.id, info);
   });

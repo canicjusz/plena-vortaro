@@ -40,8 +40,10 @@
         updateIcons();
     });
     browser.storage.onChanged.addListener(({ turnedOn }) => {
-        turnedOnLocally = turnedOn.newValue;
-        updateIcons();
+        if (turnedOn) {
+            turnedOnLocally = turnedOn.newValue;
+            updateIcons();
+        }
     });
     browser.runtime.onInstalled.addListener(() => {
         browser.tabs.create({

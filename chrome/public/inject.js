@@ -284,7 +284,6 @@
         while (!element.classList.contains("PIValdonajxo")) {
             element = element.parentElement;
         }
-        console.log(element);
         return +element.getAttribute("number");
     }
     document.addEventListener("mousedown", (e) => {
