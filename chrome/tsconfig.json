@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    // "types": ["chrome", "svelte"],
+    "types": ["chrome", "svelte"],
     "typeRoots": ["node_modules/@types"],
     "isolatedModules": false,
     "target": "ES2018",
