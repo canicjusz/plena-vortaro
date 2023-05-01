@@ -4,7 +4,8 @@
   "description": "Ĉi tie estos informoj pri kontribuado, ktp.",
   "main": "zip.js",
   "scripts": {
-    "build": "cd chrome && npm run build && cd ../firefox && npm run build && cd .. && node zip.js"
+    "build": "cd chrome && npm run build && cd ../firefox && npm run build && cd .. && node zip.js",
+    "installation": "npm i && cd chrome && npm i && cd ../firefox && npm i"
   },
   "repository": {
     "type": "git",

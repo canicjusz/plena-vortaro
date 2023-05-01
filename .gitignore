@@ -1,8 +1,10 @@
+/firefox/public/
 /firefox/node_modules/
 /firefox/package-lock.json
 /firefox/FORREVIEWER.md
 firefox_addon.zip
 firefox_source.zip
+/chrome/public/
 /chrome/node_modules/
 /chrome/package-lock.json
 /chrome/FORREVIEWER.md
