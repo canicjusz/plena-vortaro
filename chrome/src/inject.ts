@@ -486,7 +486,9 @@
     background,
     text,
     border,
-  }: StorageChange) {
+  }: {
+    [key: string]: chrome.storage.StorageChange;
+  }) {
     if (turnedOn) {
       local.turnedOn = turnedOn.newValue;
       if (!local.turnedOn) {

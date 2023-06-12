@@ -477,7 +477,9 @@
     background,
     text,
     border,
-  }: StorageChange) {
+  }: {
+    [key: string]: browser.storage.StorageChange;
+  }) {
     if (turnedOn) {
       local.turnedOn = turnedOn.newValue;
       if (!local.turnedOn) {

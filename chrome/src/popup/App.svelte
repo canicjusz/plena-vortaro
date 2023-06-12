@@ -193,11 +193,12 @@
         <details>
           <summary class="setting__title">Fono</summary>
           <div class="setting__content">
-            <label class="setting__label"
+            <label class="setting__label" for="background"
               ><span class="setting__field">La koloro:</span>
               <ChromaPicker
                 bind:color={backgroundLocal.color}
                 class="setting__input"
+                id="background"
               />
             </label>
           </div>
@@ -207,7 +208,7 @@
         <details>
           <summary class="setting__title">Teksto</summary>
           <div class="setting__content">
-            <label class="setting__label"
+            <label class="setting__label" for="size"
               ><span class="setting__field">La grandeco:</span><input
                 type="range"
                 bind:value={textLocal.size}
@@ -215,12 +216,14 @@
                 max="35"
                 step="1"
                 class="setting__input"
+                id="size"
               /></label
             >
-            <label class="setting__label"
+            <label class="setting__label" for="color"
               ><span class="setting__field">La koloro:</span><ChromaPicker
                 bind:color={textLocal.color}
                 class="setting__input"
+                id="color"
               /></label
             >
           </div>
@@ -230,7 +233,7 @@
         <details>
           <summary class="setting__title">Bordero</summary>
           <div class="setting_content">
-            <label class="setting__label"
+            <label class="setting__label" for="border-size"
               ><span class="setting__field">La larĝo:</span><input
                 type="range"
                 bind:value={borderLocal.width}
@@ -238,12 +241,14 @@
                 max="25"
                 step="1"
                 class="setting__input"
+                id="border-size"
               /></label
             >
-            <label class="setting__label"
+            <label class="setting__label" for="border-color"
               ><span class="setting__field">La koloro:</span><ChromaPicker
                 bind:color={borderLocal.color}
                 class="setting__input"
+                id="border-color"
               /></label
             >
           </div>
